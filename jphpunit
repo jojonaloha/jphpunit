@@ -1,0 +1,106 @@
+#!/usr/bin/php
+<?php
+/**
+ * jphpUnit
+ * Jonathan's simple php unit tester.
+ */
+
+/**
+ * Command line input.
+ */
+$testsuite = $argv[1];
+
+if (substr($testsuite, -4) == '.php') {
+  $testclass = substr($testsuite, 0, -4);
+} else {
+  $testclass = $testsuite;
+  $testsuite .= '.php';
+}
+
+if (!file_exists($testsuite)) {
+  die('Cannot find '. $testsuite);
+}
+
+require_once($testsuite);
+
+eval('$obj = new '. $testclass .'();');
+$obj->run();
+
+
+/**
+ * Base class
+ */
+abstract class jphpUnit {
+  
+  protected $test_count = 0;
+  protected $failure_count = 0;
+  protected $success_count = 0;
+  protected $tests = array();
+  protected $failures = array();
+  
+  public function assertEquals($expected, $actual, $message = NULL) {
+    if ($expected !== $actual) {
+      $failure = 'Failed to assert that '. $this->_print($actual) .' equals expected '. $this->_print($expected) ."\n";
+      if ($message != NULL) {
+        $failure .= $message ."\n";
+      }
+      throw new Exception($failure);
+    }
+  }
+  
+  public function run() {
+    echo "jphpUnit v 1.0\njojonaloha's Simple PHP Unit tester.\nBy Jonathan Jordan <jojonaloha@gmail.com>\n\n";
+    // Find all functions that start with test
+    $tests = $this->_getTests();
+    foreach ($tests as $test) {
+      try {
+        $this->$test();
+        $this->tests[$test] = TRUE;
+        $this->success_count++;
+        echo '.';
+      } catch (Exception $e) {
+        $this->tests[$test] = FALSE;
+        echo 'F';
+        $this->failure_count++;
+        $this->failures[$test] = $e->getMessage();
+      }
+      $this->test_count++;
+    }
+    
+    echo "\n\n";
+    foreach ($this->failures as $method => $failure) {
+      echo $method .': '. $failure ."\n";
+    }
+    
+    echo $this->failure_count .' failures, '. $this->success_count .' passed. Total '. $this->test_count ." tests.\n";
+  }
+  
+  final protected function _print($data) {
+    // If boolean value
+    if ($data === TRUE) {
+      return '(bool) TRUE';
+    } elseif ($data === FALSE) {
+      return '(bool) FALSE';
+    } else {
+      return '('. gettype($data) .'): '. print_r($data, 1);
+    }
+  }
+  
+  final protected function _getTests() {
+    static $methods = array();
+    
+    if (!empty($methods)) {
+      return $methods;
+    }
+    
+    $all_methods = get_class_methods(get_class($this));
+    foreach ($all_methods as $method) {
+      if (substr($method, 0, 4) == 'test') {
+        $methods[] = $method;
+      }
+    }
+    
+    return $methods;
+  }
+  
+}

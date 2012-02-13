@@ -1,0 +1,9 @@
+jphpUnit
+Jonathan's simple php unit tester.
+
+This is a super simple unit testing class for php. This came about when I
+found myself without internet and needing to write a few unit tests. So, I
+threw this simple class together. I wanted my class to function similarly
+to PHPUnit, so it generates similarly formatted output and you call it and
+write your unit tests very similarly, but this class only provides a very
+small fraction of the features that you would get out of PHPUnit.
